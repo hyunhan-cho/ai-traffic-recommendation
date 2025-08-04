@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>AI 경로 추천</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; background-color: #f4f4f9; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 2em; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1, h2 { color: #333; }
+        form { display: flex; gap: 1em; margin-bottom: 2em; }
+        input[type="text"] { flex: 1; padding: 0.8em; border: 1px solid #ddd; border-radius: 4px; }
+        button { padding: 0.8em 1.5em; border: none; background-color: #007bff; color: white; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .result-box { border: 1px solid #eee; padding: 1.5em; margin-top: 1em; border-radius: 8px; background-color: #fafafa;}
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 AI 최적 경로 추천</h1>
+        <p>출발지와 도착지를 입력하면, AI가 최적의 출발 시간을 추천해드립니다.</p>
+        
+        <form method="POST">
+            {% csrf_token %}
+            <input type="text" name="start_place" placeholder="출발지 (예: 강남역)" required>
+            <input type="text" name="goal_place" placeholder="도착지 (예: 광화문)" required>
+            <button type="submit">경로 분석하기</button>
+        </form>
+
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+
+        {% if ai_recommendation %}
+            <h2>📊 분석 결과: {{ start_place }} → {{ goal_place }}</h2>
+            
+            <div class="result-box">
+                <h3>🤖 AI 교통 분석 및 추천</h3>
+                <p>{{ ai_recommendation|safe }}</p>
+            </div>
+
+            <div class="result-box">
+                <h3>⏰ 시간대별 예상 정보</h3>
+                <ul>
+                    {% if current_result %}
+                    <li>
+                        <strong>지금 바로 출발:</strong> 
+                        소요 시간 {% widthratio current_result.summary.duration 60 1 %}분, 
+                        거리 {{ current_result.summary.distance|floatformat:1 }}km, 
+                        예상 택시비 {{ current_result.summary.fare.taxi|floatformat:0 }}원
+                    </li>
+                    {% endif %}
+                    {% for result in future_results %}
+                    <li>
+                        <strong>{{ result.departure_time|date:"H:i" }} 출발:</strong>
+                        소요 시간 {% widthratio result.route_data.summary.duration 60 1 %}분, 
+                        거리 {{ result.route_data.summary.distance|floatformat:1 }}km,
+                        예상 택시비 {{ result.route_data.summary.fare.taxi|floatformat:0 }}원
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
