@@ -21,6 +21,14 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 # Cloudtype 배포를 위한 ALLOWED_HOSTS 설정
 ALLOWED_HOSTS = ['*']  # 모든 호스트 허용 (배포용)
 
+# CSRF 신뢰할 수 있는 도메인 설정 (Cloudtype 배포용)
+CSRF_TRUSTED_ORIGINS = [
+    'https://port-0-ai-chatbot-mdx2z6qsa336db64.sel5.cloudtype.app',
+    'https://*.cloudtype.app',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
+
 
 # Application definition
 
