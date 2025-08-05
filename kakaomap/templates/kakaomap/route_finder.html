@@ -9,10 +9,64 @@
         h1, h2 { color: #333; }
         form { display: flex; gap: 1em; margin-bottom: 2em; }
         input[type="text"] { flex: 1; padding: 0.8em; border: 1px solid #ddd; border-radius: 4px; }
-        button { padding: 0.8em 1.5em; border: none; background-color: #007bff; color: white; border-radius: 4px; cursor: pointer; }
+        button { padding: 0.8em 1.5em; border: none; background-color: #007bff; color: white; border-radius: 4px; cursor: pointer; transition: all 0.3s; }
         button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #6c757d; cursor: not-allowed; }
         .result-box { border: 1px solid #eee; padding: 1.5em; margin-top: 1em; border-radius: 8px; background-color: #fafafa;}
         .error { color: red; font-weight: bold; }
+        
+        /* 로딩 애니메이션 */
+        .loading-container { 
+            display: none; 
+            text-align: center; 
+            padding: 2em; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            margin-top: 1em;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #ffffff;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1em;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 0.5em;
+        }
+        
+        .loading-subtitle {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        /* 결과 애니메이션 */
+        .result-appear {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body>
@@ -20,47 +74,76 @@
         <h1>🚀 AI 최적 경로 추천</h1>
         <p>출발지와 도착지를 입력하면, AI가 최적의 출발 시간을 추천해드립니다.</p>
         
-        <form method="POST">
+        <form method="POST" id="routeForm">
             {% csrf_token %}
             <input type="text" name="start_place" placeholder="출발지 (예: 강남역)" required>
             <input type="text" name="goal_place" placeholder="도착지 (예: 광화문)" required>
-            <button type="submit">경로 분석하기</button>
+            <button type="submit" id="submitBtn">경로 분석하기</button>
         </form>
+
+        <!-- 로딩 화면 -->
+        <div class="loading-container" id="loadingContainer">
+            <div class="spinner"></div>
+            <div class="loading-text">🤖 AI가 최적 경로를 분석 중입니다...</div>
+            <div class="loading-subtitle">카카오맵 데이터와 교통 빅데이터를 활용해 분석하고 있어요</div>
+        </div>
 
         {% if error %}
             <p class="error">{{ error }}</p>
         {% endif %}
 
         {% if ai_recommendation %}
-            <h2>📊 분석 결과: {{ start_place }} → {{ goal_place }}</h2>
-            
-            <div class="result-box">
-                <h3>🤖 AI 교통 분석 및 추천</h3>
-                <p>{{ ai_recommendation|safe }}</p>
-            </div>
+            <div class="result-appear">
+                <h2>📊 분석 결과: {{ start_place }} → {{ goal_place }}</h2>
+                
+                <div class="result-box">
+                    <h3>🤖 AI 교통 분석 및 추천</h3>
+                    <p>{{ ai_recommendation|safe }}</p>
+                </div>
 
-            <div class="result-box">
-                <h3>⏰ 시간대별 예상 정보</h3>
-                <ul>
-                    {% if current_result %}
-                    <li>
-                        <strong>지금 바로 출발:</strong> 
-                        소요 시간 {% widthratio current_result.summary.duration 60 1 %}분, 
-                        거리 {{ current_result.summary.distance|floatformat:1 }}km, 
-                        예상 택시비 {{ current_result.summary.fare.taxi|floatformat:0 }}원
-                    </li>
-                    {% endif %}
-                    {% for result in future_results %}
-                    <li>
-                        <strong>{{ result.departure_time|date:"H:i" }} 출발:</strong>
-                        소요 시간 {% widthratio result.route_data.summary.duration 60 1 %}분, 
-                        거리 {{ result.route_data.summary.distance|floatformat:1 }}km,
-                        예상 택시비 {{ result.route_data.summary.fare.taxi|floatformat:0 }}원
-                    </li>
-                    {% endfor %}
-                </ul>
+                <div class="result-box">
+                    <h3>⏰ 시간대별 예상 정보</h3>
+                    <ul>
+                        {% if current_result %}
+                        <li>
+                            <strong>지금 바로 출발:</strong> 
+                            소요 시간 {% widthratio current_result.summary.duration 60 1 %}분, 
+                            거리 {{ current_result.summary.distance|floatformat:1 }}km, 
+                            예상 택시비 {{ current_result.summary.fare.taxi|floatformat:0 }}원
+                        </li>
+                        {% endif %}
+                        {% for result in future_results %}
+                        <li>
+                            <strong>{{ result.departure_time|date:"H:i" }} 출발:</strong>
+                            소요 시간 {% widthratio result.route_data.summary.duration 60 1 %}분, 
+                            거리 {{ result.route_data.summary.distance|floatformat:1 }}km,
+                            예상 택시비 {{ result.route_data.summary.fare.taxi|floatformat:0 }}원
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
             </div>
         {% endif %}
     </div>
+
+    <script>
+        document.getElementById('routeForm').addEventListener('submit', function(e) {
+            // 버튼 비활성화 및 텍스트 변경
+            const submitBtn = document.getElementById('submitBtn');
+            const loadingContainer = document.getElementById('loadingContainer');
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = '분석 중입니다람쥐 ㅎㅎ...';
+            
+            // 로딩 화면 표시
+            loadingContainer.style.display = 'block';
+            
+            // 기존 결과 숨기기
+            const existingResults = document.querySelector('.result-appear');
+            if (existingResults) {
+                existingResults.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>

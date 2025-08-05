@@ -13,8 +13,8 @@ Django와 카카오맵 API, OpenAI를 활용한 AI 기반 교통 경로 추천 �
 
 ### 1. 저장소 클론
 ```bash
-git clone https://github.com/hyunhan-cho/ai-chatbot.git
-cd ai_chatbot
+git clone https://github.com/hyunhan-cho/ai-traffic-recommendation.git
+cd ai-traffic-recommendation
 ```
 
 ### 2. 가상환경 생성 및 활성화
