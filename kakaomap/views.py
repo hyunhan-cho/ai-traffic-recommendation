@@ -169,7 +169,7 @@ def get_enhanced_ai_recommendation(results, start_place, goal_place):
     # AI에게 분석 요청
     prompt = f"""
 다음은 {start_place}에서 {goal_place}까지의 시간대별 교통 분석 결과입니다.
-서울시 교통 빅데이터를 기반으로 2시간 간격으로 분석했습니다:
+서울시 교통 빅데이터를 기반으로 10분 간격으로 분석했습니다:
 
 {route_data}
 
@@ -234,9 +234,9 @@ def route_finder(request):
         
         results = []
         
-        # 현재 시간부터 2시간 간격으로 12시간 분석 (총 6개 시간대)
-        for i in range(6):
-            future_time = current_time + timedelta(hours=i * 2)
+        # 현재 시간부터 10분 간격으로 2시간 분석 (총 12개 시간대)
+        for i in range(12):
+            future_time = current_time + timedelta(minutes=i * 10)
             future_hour = future_time.hour
             future_day = future_time.weekday()
             
@@ -330,9 +330,9 @@ def route_analysis_api(request):
             
             results = []
             
-            # 현재 시간부터 2시간 간격으로 12시간 분석 (총 6개 시간대)
-            for i in range(6):
-                future_time = current_time + timedelta(hours=i * 2)
+            # 현재 시간부터 10분 간격으로 2시간 분석 (총 12개 시간대)
+            for i in range(12):
+                future_time = current_time + timedelta(minutes=i * 10)
                 future_hour = future_time.hour
                 future_day = future_time.weekday()
                 
